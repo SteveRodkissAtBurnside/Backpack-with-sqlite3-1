@@ -3,41 +3,55 @@
 import sqlite3
 
 DATABASE_FILENAME = "backpack.db"
-db = None
 
-def get_db():
-  #connect and return the db if it doesn't already exist
-  global db
-  if db==None:
-     db = sqlite3.connect(DATABASE_FILENAME)
-  return db
+def initialize_database():
+  '''Initialise my custom database table(s) if not already created with sqlite studio!!!'''
+  with sqlite3.connect(DATABASE_FILENAME) as db:
+    cursor = db.cursor()
+    sql='CREATE TABLE contents(id INTEGER PRIMARY KEY AUTOINCREMENT, item_name TEXT(30));'
+    cursor.execute(sql)
+    db.commit()
+  
 
-def close_db():
-  #close connection if it exists
-  global db
-  if db != None:
-    db.close()
-
-def create_table():
-  #create the contents table
-  cursor = get_db().cursor()
-  sql = 'CREATE TABLE contents(id INTEGER PRIMARY KEY AUTOINCREMENT, item_name TEXT(30));'
-  cursor.execute(sql)
-
-def print_contents():
+def get_contents(db):
   #print all the contents of the database
-  cursor = get_db().cursor()
+  cursor = db.cursor()
   cursor.execute("SELECT * FROM contents")
-  results = cursor.fetchall()
-  print(results)
+  return cursor.fetchall()
 
-def insert_item(item_name):
+def insert_item(db, item_name):
   #put an item into contents
-  cursor = get_db().cursor()
+  cursor = db.cursor()
   sql = "INSERT INTO contents (item_name) VALUES (?)"
   cursor.execute(sql,(item_name,))
 
+def delete_item(db, item_name):
+  '''delete the item if it exists'''
+  cursor = db.cursor()
+  sql = "DELETE FROM contents WHERE item_name=?"
+  cursor.execute(sql, (item_name, ))
+  db.commit()
 
+if __name__=="__main__":
+  #main program starts here
+  with sqlite3.connect(DATABASE_FILENAME) as db:
+    while True:
+      #ask for what you want to do
+      user_input = input("What do you want to do?\n1. Print Contents\n2. Add an Item\n3. Delete an Item\n4. Exit\n")
+      if user_input=="1":
+        #print all contents
+        print(get_contents(db))
+      elif user_input=="2":
+        item = input("What item do you want to add? ")
+        insert_item(db,item)
+      elif user_input=="3":
+        item = input("What item do you want to delete? ")
+        delete_item(db,item)
+      elif user_input=="4":
+        break
+    
+
+  
 
 
 
